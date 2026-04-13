@@ -1,4 +1,4 @@
-import { Flame, UserRound } from "lucide-react";
+import { UserRound } from "lucide-react";
 import { animate } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import type { ITeacherDetail } from "@/features/teacher/teacher.type";
@@ -157,7 +157,6 @@ export function ProfileSidebar({ profile, newImage, complation, detail, cacheUse
 							</p>
 							<div className="flex items-center gap-1.5">
 								<span className="text-xl font-black text-foreground tabular-nums">{percentage}%</span>
-								{percentage > 0 && <Flame className="size-4 text-orange-500 fill-orange-500" />}
 							</div>
 						</div>
 

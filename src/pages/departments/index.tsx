@@ -1,4 +1,4 @@
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, Plus, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useSearchParams } from "react-router";
@@ -37,7 +37,7 @@ function createColumns(
 		{
 			accessorKey: "id",
 			header: "#",
-			cell: ({ row }) => <span className="text-muted-foreground">{row.index + 1}</span>,
+			cell: ({ row }) => <span className="text-muted-foreground/70 font-medium">{row.index + 1}</span>,
 		},
 		{
 			accessorKey: "imgUrl",
@@ -45,14 +45,16 @@ function createColumns(
 			cell: ({ row }) => {
 				const imgUrl = row.original.imgUrl;
 				return imgUrl ? (
-					<img
-						src={imgUrl}
-						alt={row.original.name}
-						className="w-9 h-9 rounded-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
-						onClick={() => onImageClick(imgUrl)}
-					/>
+					<div className="relative group w-10 h-10">
+						<img
+							src={imgUrl}
+							alt={row.original.name}
+							className="w-full h-full rounded-xl object-cover ring-1 ring-border group-hover:ring-primary/50 transition-all cursor-pointer shadow-sm"
+							onClick={() => onImageClick(imgUrl)}
+						/>
+					</div>
 				) : (
-					<div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-[13px]">
+					<div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold text-xs shadow-sm">
 						{row.original.name.charAt(0).toUpperCase()}
 					</div>
 				);
@@ -61,35 +63,48 @@ function createColumns(
 		{
 			accessorKey: "name",
 			header: "Kafedra",
-			cell: ({ row }) => <span className="font-medium">{row.getValue("name")}</span>,
+			cell: ({ row }) => (
+				<div className="flex flex-col">
+					<span className="font-semibold text-foreground tracking-tight">{row.getValue("name")}</span>
+					<span className="text-[11px] text-muted-foreground lg:hidden">
+						{collages.find((c) => c.id === row.original.collegeId)?.name}
+					</span>
+				</div>
+			),
 		},
 		{
 			accessorKey: "collegeId",
 			header: "Fakulteti",
 			cell: ({ row }) => {
 				const college = collages.find((c) => c.id === row.original.collegeId);
-				return <span className="font-medium">{college?.name ?? "—"}</span>;
+				return (
+					<span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary text-secondary-foreground border border-border">
+						{college?.name ?? "—"}
+					</span>
+				);
 			},
 		},
 		{
 			id: "actions",
-			header: () => <div className="text-center">Amallar</div>,
+			header: () => <div className="text-right pr-4">Amallar</div>,
 			cell: ({ row }) => (
-				<div className="flex items-center justify-center gap-2">
+				<div className="flex items-center justify-end gap-2 pr-2">
 					<button
 						type="button"
 						onClick={() => onEdit(row.original)}
-						className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 text-[12px] font-semibold px-2.5 py-1 rounded-md transition-colors cursor-pointer"
+						className="p-2 flex gap-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-all active:scale-95"
+						title="Tahrirlash"
 					>
-						<Pencil className="size-3" />
+						<Pencil className="size-4" />
 						Tahrirlash
 					</button>
 					<ConfirmPopover onConfirm={() => onDelete(row.original)}>
 						<button
 							type="button"
-							className="inline-flex items-center gap-1.5 bg-red-50 text-red-600 hover:bg-red-100 text-[12px] font-semibold px-2.5 py-1 rounded-md transition-colors cursor-pointer"
+							className="p-2 flex gap-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all active:scale-95"
+							title="O'chirish"
 						>
-							<Trash2 className="size-3" />
+							<Trash2 className="size-4" />
 							O'chirish
 						</button>
 					</ConfirmPopover>
@@ -105,18 +120,21 @@ export default function Departments() {
 	const search = searchParams.get("name") ?? "";
 
 	const setSearch = (value: string) => {
-		setSearchParams((prev) => {
-			const next = new URLSearchParams(prev);
-			if (value) next.set("name", value);
-			else next.delete("name");
-			return next;
-		});
+		setSearchParams(
+			(prev) => {
+				const next = new URLSearchParams(prev);
+				if (value) next.set("name", value);
+				else next.delete("name");
+				return next;
+			},
+			{ replace: true },
+		);
 	};
 
 	const isOpen = useModalIsOpen();
 	const editData = useModalEditData() as Department | null;
 	const { open, close } = useModalActions();
-	const isEdit = editData !== null;
+	const isEdit = !!editData;
 
 	const { data: departmentResponse, refetch } = useDepartment();
 	const { mutate: createDepartment, isPending: isCreating } = useCreateDepartment();
@@ -171,9 +189,10 @@ export default function Departments() {
 	};
 
 	const onSubmit = (values: DepartmentFormValues) => {
+		const data: any = { name: values.name, collegeId: Number(values.departmentId) };
+		if (values.image) data.image = values.image;
+
 		if (isEdit && editData) {
-			const data: any = { name: values.name, departmentId: Number(values.departmentId) };
-			if (values.image) data.image = values.image;
 			updateDepartment(
 				{ id: editData.id, collegeId: Number(values.departmentId), data },
 				{
@@ -183,102 +202,126 @@ export default function Departments() {
 					},
 				},
 			);
-			return;
-		}
-
-		if (!values.image) return;
-		if (!values.departmentId) return;
-
-		createDepartment(
-			{ name: values.name, collegeId: Number(values.departmentId), image: values.image },
-			{
-				onSuccess: () => {
-					handleClose();
-					refetch();
+		} else {
+			if (!values.image || !values.departmentId) return;
+			createDepartment(
+				{ name: values.name, collegeId: Number(values.departmentId), image: values.image },
+				{
+					onSuccess: () => {
+						handleClose();
+						refetch();
+					},
 				},
-			},
-		);
+			);
+		}
 	};
 
 	return (
-		<div className="flex flex-col gap-4">
-			<TableToolbar
-				countLabel="Kafedralar soni"
-				count={filteredDepartments.length}
-				searchValue={search}
-				onSearchChange={setSearch}
-				onAdd={() => open()}
-				addLabel="Kafedra qo'shish"
-			/>
+		<div className="space-y-6 p-1 md:p-2">
+			{/* Custom Toolbar Styling */}
+			<div className="bg-card/50 backdrop-blur-sm border border-border rounded-2xl p-4 shadow-sm">
+				<TableToolbar
+					countLabel="Umumiy kafedralar"
+					count={filteredDepartments.length}
+					searchValue={search}
+					onSearchChange={setSearch}
+					onAdd={() => open()}
+					addLabel="Kafedra qo'shish"
+				/>
+			</div>
 
-			<DataTable columns={columns} data={filteredDepartments} />
+			<div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
+				<DataTable columns={columns} data={filteredDepartments} />
+			</div>
 
+			{/* Modern Image Preview */}
 			{previewImage && (
-				<button
-					type="button"
-					className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 cursor-pointer w-full border-0"
+				<div
+					className="fixed inset-0 bg-background/80 backdrop-blur-md flex items-center justify-center z-[100] p-4 transition-all animate-in fade-in duration-200"
 					onClick={() => setPreviewImage(null)}
 				>
-					<div
-						role="dialog"
-						aria-modal="true"
-						aria-label="Image preview"
-						className="relative flex items-center justify-center"
-						onClick={(e) => e.stopPropagation()}
-					>
-						<img src={previewImage} alt="Preview" className="w-96 h-96 rounded-full object-cover shadow-lg" />
+					<div className="relative max-w-lg w-full aspect-square" onClick={(e) => e.stopPropagation()}>
+						<img
+							src={previewImage}
+							alt="Preview"
+							className="w-full h-full rounded-3xl object-cover shadow-2xl ring-4 ring-background"
+						/>
+						<button
+							className="absolute -top-4 -right-4 bg-primary text-primary-foreground rounded-full p-2 shadow-lg hover:scale-110 transition-transform"
+							onClick={() => setPreviewImage(null)}
+						>
+							<Plus className="rotate-45 size-5" />
+						</button>
 					</div>
-				</button>
+				</div>
 			)}
 
-			<Modal open={isOpen} onClose={handleClose} title={isEdit ? "Kafedrani tahrirlash" : "Kafedra qo'shish"}>
-				<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5 py-2">
-					<div className="flex flex-col gap-2">
-						<Label>Rasm</Label>
-						<Controller
-							name="image"
-							control={control}
-							rules={{ required: !isEdit && "Rasm tanlanishi shart" }}
-							render={({ field }) => <FileInput type="image" value={field.value} onChange={field.onChange} />}
-						/>
-						{errors.image && <span className="text-[12px] text-red-500">{errors.image.message}</span>}
-					</div>
+			{/* Styled Modal Form */}
+			<Modal open={isOpen} onClose={handleClose} title={isEdit ? "Kafedrani tahrirlash" : "Yangi kafedra qo'shish"}>
+				<form onSubmit={handleSubmit(onSubmit)} className="space-y-6 py-4">
+					<div className="space-y-4">
+						<div className="space-y-2">
+							<Label className="text-sm font-semibold">Kafedra logotipi</Label>
+							<Controller
+								name="image"
+								control={control}
+								rules={{ required: !isEdit && "Rasm yuklash majburiy" }}
+								render={({ field }) => (
+									<div className="relative group">
+										<FileInput type="image" value={field.value} onChange={field.onChange} />
+										<div className="absolute inset-0 rounded-xl pointer-events-none border-2 border-dashed border-transparent group-hover:border-primary/20 transition-colors" />
+									</div>
+								)}
+							/>
+							{errors.image && <p className="text-[12px] font-medium text-destructive mt-1">{errors.image.message}</p>}
+						</div>
 
-					<div className="flex flex-col gap-2">
-						<Label>Fakultet</Label>
-						<Controller
-							name="departmentId"
-							control={control}
-							rules={{ required: "Fakultet tanlanishi shart" }}
-							render={({ field }) => (
-								<SearchableSelect
-									options={facultyOptions}
-									value={field.value}
-									onChange={field.onChange}
-									placeholder="Fakultetni tanlang"
-									searchPlaceholder="Fakultet qidirish..."
+						<div className="grid gap-4 md:grid-cols-1">
+							<div className="space-y-2">
+								<Label className="text-sm font-semibold">Tegishli fakultet</Label>
+								<Controller
+									name="departmentId"
+									control={control}
+									rules={{ required: "Fakultetni tanlang" }}
+									render={({ field }) => (
+										<SearchableSelect
+											options={facultyOptions}
+											value={field.value}
+											onChange={field.onChange}
+											placeholder="Fakultetni qidiring..."
+										/>
+									)}
 								/>
-							)}
-						/>
-						{errors.departmentId && <span className="text-[12px] text-red-500">{errors.departmentId.message}</span>}
+								{errors.departmentId && (
+									<p className="text-[12px] font-medium text-destructive mt-1">{errors.departmentId.message}</p>
+								)}
+							</div>
+
+							<div className="space-y-2">
+								<Label htmlFor="department-name" className="text-sm font-semibold">
+									Kafedra nomi
+								</Label>
+								<Input
+									id="department-name"
+									className="h-11 rounded-xl bg-secondary/30 focus-visible:ring-primary/30"
+									placeholder="Masalan: Axborot texnologiyalari"
+									{...register("name", { required: "Kafedra nomini kiriting" })}
+								/>
+								{errors.name && <p className="text-[12px] font-medium text-destructive mt-1">{errors.name.message}</p>}
+							</div>
+						</div>
 					</div>
 
-					<div className="flex flex-col gap-2">
-						<Label htmlFor="department-name">Kafedra nomi</Label>
-						<Input
-							id="department-name"
-							placeholder="Masalan: Farmatsiya va kimyo kafedrasi"
-							{...register("name", { required: "Kafedra nomi kiritilishi shart" })}
-						/>
-						{errors.name && <span className="text-[12px] text-red-500">{errors.name.message}</span>}
-					</div>
-
-					<div className="flex justify-end gap-2">
-						<Button type="button" variant="outline" onClick={handleClose} disabled={isPending}>
+					<div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
+						<Button type="button" variant="ghost" onClick={handleClose} disabled={isPending} className="rounded-xl">
 							Bekor qilish
 						</Button>
-						<Button type="submit" disabled={isPending}>
-							{isPending ? "Yuklanmoqda..." : isEdit ? "Saqlash" : "Qo'shish"}
+						<Button
+							type="submit"
+							disabled={isPending}
+							className="rounded-xl px-8 shadow-lg shadow-primary/20 active:scale-95 transition-all"
+						>
+							{isPending ? "Saqlanmoqda..." : isEdit ? "O'zgarishlarni saqlash" : "Kafedrani yaratish"}
 						</Button>
 					</div>
 				</form>

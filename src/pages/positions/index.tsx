@@ -1,4 +1,4 @@
-import { Briefcase, Pencil, Trash2, Users } from "lucide-react";
+import { Briefcase, Pencil, Trash2, Users, Plus, Search, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { ConfirmPopover } from "@/components/confirm-popover/confirm-popover";
@@ -19,27 +19,32 @@ import { Label } from "@/ui/label";
 type PositionFormValues = {
 	name: string;
 };
+
 export default function Positions() {
 	const [search, setSearch] = useState("");
 	const isOpen = useModalIsOpen();
 	const { close, open } = useModalActions();
 	const editData = useModalEditData() as Position | null;
 	const isEdit = editData !== null;
+
 	const { data: positionResponse, refetch } = usePosition(search);
 	const { data: statsResponse } = useStatsPosition();
 	const { mutate: createPosition, isPending: isCreating } = useCreatePosition();
 	const { mutate: updatePosition, isPending: isUpdating } = useUpdatePosition();
 	const { mutate: deletePosition } = useDeletePosition();
 	const isPending = isCreating || isUpdating;
+
 	const positions: Position[] = positionResponse?.data ?? [];
 	const visiblePositions = useMemo(() => {
 		const term = search.trim().toLowerCase();
 		if (!term) return positions;
 		return positions.filter((position) => position.name.toLowerCase().includes(term));
 	}, [positions, search]);
+
 	const stats = statsResponse?.data;
 	const totalEmployees =
 		stats?.data?.reduce((sum: number, item: PositionStatistic) => sum + item.totalEmployees, 0) ?? 0;
+
 	const employeeCountByPosition = useMemo(
 		() => new Map((stats?.data ?? []).map((item) => [item.name.toLowerCase().trim(), item.totalEmployees])),
 		[stats],
@@ -60,11 +65,8 @@ export default function Positions() {
 	}
 
 	useEffect(() => {
-		if (editData) {
-			reset({ name: editData.name });
-		} else {
-			reset({ name: "" });
-		}
+		if (editData) reset({ name: editData.name });
+		else reset({ name: "" });
 	}, [editData, reset]);
 
 	const onSubmit = (values: PositionFormValues) => {
@@ -80,7 +82,6 @@ export default function Positions() {
 			);
 			return;
 		}
-
 		createPosition(values.name, {
 			onSuccess: () => {
 				handleClose();
@@ -90,103 +91,151 @@ export default function Positions() {
 	};
 
 	return (
-		<div className="flex flex-col gap-4">
+		<div className="flex flex-col gap-6 animate-in fade-in duration-500">
+			{/* Stats Section */}
 			{stats && (
 				<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-					<Card className="py-0">
-						<CardContent className="flex items-center gap-4 px-5 py-4">
-							<div className="flex items-center justify-center size-10 rounded-full bg-blue-50">
-								<Briefcase className="size-5 text-blue-600" />
+					<Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden bg-white dark:bg-slate-950">
+						<CardContent className="flex items-center gap-4 px-6 py-5">
+							<div className="flex items-center justify-center size-12 rounded-2xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 shadow-inner">
+								<Briefcase className="size-6" />
 							</div>
-							<div className="flex flex-col gap-0.5">
-								<span className="text-[12px] text-muted-foreground">Jami lavozimlar</span>
-								<span className="text-[20px] font-bold leading-tight">{positions.length}</span>
+							<div className="flex flex-col">
+								<span className="text-[12px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+									Jami lavozimlar
+								</span>
+								<span className="text-2xl font-black text-slate-900 dark:text-white tabular-nums">
+									{positions.length}
+								</span>
 							</div>
 						</CardContent>
 					</Card>
-					<Card className="py-0">
-						<CardContent className="flex items-center gap-4 px-5 py-4">
-							<div className="flex items-center justify-center size-10 rounded-full bg-blue-50">
-								<Users className="size-5 text-blue-600" />
+					<Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden bg-white dark:bg-slate-950">
+						<CardContent className="flex items-center gap-4 px-6 py-5">
+							<div className="flex items-center justify-center size-12 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 shadow-inner">
+								<Users className="size-6" />
 							</div>
-							<div className="flex flex-col gap-0.5">
-								<span className="text-[12px] text-muted-foreground">Jami xodimlar</span>
-								<span className="text-[20px] font-bold leading-tight">{totalEmployees}</span>
+							<div className="flex flex-col">
+								<span className="text-[12px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+									Jami xodimlar
+								</span>
+								<span className="text-2xl font-black text-slate-900 dark:text-white tabular-nums">
+									{totalEmployees}
+								</span>
 							</div>
 						</CardContent>
 					</Card>
 				</div>
 			)}
 
-			<TableToolbar
-				countLabel="Lavozimlar soni"
-				count={visiblePositions.length}
-				searchValue={search}
-				onSearchChange={setSearch}
-				onAdd={() => open()}
-				addLabel="Lavozim qo'shish"
-			/>
+			{/* Toolbar Section */}
+			<div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-2 shadow-sm">
+				<TableToolbar
+					countLabel="Topilgan lavozimlar"
+					count={visiblePositions.length}
+					searchValue={search}
+					onSearchChange={setSearch}
+					onAdd={() => open()}
+					addLabel="Lavozim qo'shish"
+				/>
+			</div>
 
+			{/* Grid Content */}
 			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
 				{visiblePositions.length ? (
-					visiblePositions.map((position) => (
-						<Card key={position.id} className="py-0">
-							<CardContent className="flex flex-col gap-4 px-5 py-5">
-								<div className="flex flex-col gap-0.5">
-									<span className="text-[15px] font-semibold leading-tight">{position.name}</span>
-									<span className="text-[12px] text-muted-foreground">
-										{employeeCountByPosition.get(position.name.toLowerCase().trim()) ?? 0} ta xodim
-									</span>
-								</div>
-								<div className="flex justify-center items-center gap-2">
-									<button
-										type="button"
-										onClick={() => open(position)}
-										className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 text-[12px] font-semibold px-2 py-1 rounded-md transition-colors cursor-pointer"
-									>
-										<Pencil className="size-3" />
-										Tahrirlash
-									</button>
-									<ConfirmPopover onConfirm={() => deletePosition(position.id)}>
+					visiblePositions.map((position) => {
+						const count = employeeCountByPosition.get(position.name.toLowerCase().trim()) ?? 0;
+						return (
+							<Card
+								key={position.id}
+								className="group border-slate-200 dark:border-slate-800 hover:border-blue-500/50 hover:shadow-md transition-all duration-300 bg-white dark:bg-slate-950 rounded-2xl overflow-hidden"
+							>
+								<CardContent className="flex flex-col gap-5 px-5 py-5">
+									<div className="flex flex-col gap-1">
+										<h3 className="text-[16px] font-bold text-slate-900 dark:text-slate-100 group-hover:text-blue-600 transition-colors truncate">
+											{position.name}
+										</h3>
+										<div className="flex items-center gap-1.5 text-slate-500">
+											<Users className="size-3.5" />
+											<span className="text-[13px] font-medium">{count} ta xodim biriktirilgan</span>
+										</div>
+									</div>
+
+									<div className="flex items-center gap-2 pt-2 border-t border-slate-50 dark:border-slate-900">
 										<button
 											type="button"
-											className="inline-flex items-center gap-1.5 bg-red-50 text-red-700 hover:bg-red-100 text-[12px] font-semibold px-2 py-1 rounded-md transition-colors cursor-pointer"
+											onClick={() => open(position)}
+											className="flex-1 inline-flex items-center justify-center gap-1.5 bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-blue-50 hover:text-blue-700 text-[12px] font-bold py-2 rounded-xl transition-all active:scale-95"
 										>
-											<Trash2 className="size-3" />
-											O'chirish
+											<Pencil className="size-3.5" />
+											Tahrirlash
 										</button>
-									</ConfirmPopover>
-								</div>
-							</CardContent>
-						</Card>
-					))
+										<ConfirmPopover onConfirm={() => deletePosition(position.id)}>
+											<button
+												type="button"
+												className="inline-flex items-center justify-center size-9 bg-rose-50 dark:bg-rose-500/10 text-rose-600 hover:bg-rose-600 hover:text-white rounded-xl transition-all active:scale-95"
+											>
+												<Trash2 className="size-4" />
+											</button>
+										</ConfirmPopover>
+									</div>
+								</CardContent>
+							</Card>
+						);
+					})
 				) : (
-					<p className="col-span-full text-center text-muted-foreground py-10 text-[14px]">Ma'lumot topilmadi.</p>
+					<div className="col-span-full bg-slate-50 dark:bg-slate-900/50 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl py-16 flex flex-col items-center justify-center gap-3 text-center">
+						<div className="size-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+							<Search className="size-6" />
+						</div>
+						<p className="text-slate-500 font-medium italic">Qidiruv bo'yicha hech qanday lavozim topilmadi.</p>
+					</div>
 				)}
 			</div>
-			<Modal open={isOpen} onClose={handleClose} title={isEdit ? "Lavozimni tahrirlash" : "Lavozim qo'shish"}>
-				<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5 py-2">
-					<div className="flex flex-col gap-2">
-						<Label htmlFor="position-name">Lavozim nomi</Label>
+
+			{/* Modal Section */}
+			<Modal open={isOpen} onClose={handleClose} title={isEdit ? "Lavozimni yangilash" : "Yangi lavozim qo'shish"}>
+				<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 py-4">
+					<div className="flex flex-col gap-3">
+						<Label
+							htmlFor="position-name"
+							className="text-[13px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest ml-1"
+						>
+							Lavozim nomi
+						</Label>
 						<Input
 							id="position-name"
-							placeholder="Masalan: Professor"
+							className="h-12 rounded-xl bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-medium text-base"
+							placeholder="Masalan: Professor, Dotsent"
 							{...register("name", { required: "Lavozim nomi kiritilishi shart" })}
 						/>
-						{errors.name && <span className="text-[12px] text-red-500">{errors.name.message}</span>}
+						{errors.name && (
+							<span className="text-[12px] text-rose-500 font-semibold ml-1 flex items-center gap-1">
+								<X className="size-3" /> {errors.name.message}
+							</span>
+						)}
 					</div>
 
-					<div className="flex justify-end gap-2">
-						<Button type="button" variant="outline" onClick={handleClose} disabled={isPending}>
+					<div className="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-900">
+						<Button
+							type="button"
+							variant="ghost"
+							onClick={handleClose}
+							disabled={isPending}
+							className="rounded-xl font-bold"
+						>
 							Bekor qilish
 						</Button>
-						<Button type="submit" disabled={isPending}>
-							{isPending ? "Yuklanmoqda..." : isEdit ? "Saqlash" : "Qo'shish"}
+						<Button
+							type="submit"
+							disabled={isPending}
+							className="rounded-xl bg-blue-600 hover:bg-blue-700 px-8 font-bold shadow-lg shadow-blue-500/20 transition-all active:scale-95"
+						>
+							{isPending ? "Saqlanmoqda..." : isEdit ? "O'zgarishlarni saqlash" : "Qo'shish"}
 						</Button>
 					</div>
 				</form>
 			</Modal>
-			
 		</div>
 	);
 }

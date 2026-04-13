@@ -1,16 +1,16 @@
 import { Award, Loader2, Plus, User } from "lucide-react";
-import { useAward } from "@/hooks/teacher/useMukofot";
 import { useUser } from "@/hooks/user/useUser";
 import { MukofotModal } from "@/pages/teachers/detail/detail-modals/mukofot-modal";
 import { MukofotlarTab } from "@/pages/teachers/detail/detail-tabs/mukofotlar-tab";
 import { useModalActions } from "@/store/modalStore";
 import { Button } from "@/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/ui/avatar";
+import { useMukofot } from "@/hooks/teacher/useMukofot";
 
 export default function TeacherAwards() {
 	const { open } = useModalActions();
 	const { data: teacher, isLoading: userLoading } = useUser();
-	const { data, isLoading: mukofotLoading } = useAward(teacher?.id ?? 0);
+	const { data, isLoading: mukofotLoading } = useMukofot(teacher?.id ?? 0);
 
 	if (userLoading || mukofotLoading) {
 		return (
