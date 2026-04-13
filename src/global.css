@@ -1,0 +1,185 @@
+/* import font */
+@import "@fontsource-variable/open-sans";
+@import "@fontsource-variable/inter";
+
+
+/* import tailwind */
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* config  tailwind */
+@config "../tailwind.config.ts";
+
+/* base layer */
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    /* https://tailwindcss.com/docs/upgrade-guide#default-border-color */
+    border-color: rgba(var(--colors-palette-gray-500Channel) / var(--opacity-border)) ;
+  }
+
+  html {
+    font-size: 14px;
+  }
+
+  body {
+    background-color: var(--background);
+  }
+
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 100px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #888888;
+  border-radius: 100px;
+  
+  border: 3px solid transparent; 
+  background-clip: padding-box;
+  
+  transition: background-color 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #555555;
+  border: 2px solid transparent;
+}
+
+::-webkit-scrollbar-button {
+  display: none;
+}
+
+@supports (scrollbar-width: thin) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #888888 transparent;
+  }
+}
+
+.custom-scroll {
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
+@theme  {
+  --animate-collapsible-down: collapsible-down 0.2s ease-in-out;
+  --animate-collapsible-up: collapsible-up 0.2s ease-in-out;
+  @keyframes collapsible-down {
+    from {
+      height: 0;
+    }
+    to {
+      height: var(--radix-collapsible-content-height);
+    }
+  }
+
+  @keyframes collapsible-up {
+    from {
+      height: var(--radix-collapsible-content-height);
+    }
+    to {
+      height: 0;
+    }
+  }
+
+  --animate-slow-spin: spin 4s linear infinite;
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);  
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+}
+
+/* Shadcn UI Light Theme */
+:root {
+  --radius: 0.5rem;
+  --background: var(--colors-common-white);
+  --foreground: var(--colors-common-black);
+  --card: var(--colors-common-white);
+  --card-foreground: var(--colors-common-black);
+  --popover: var(--colors-common-white);
+  --popover-foreground: var(--colors-common-black);
+  --primary: var(--colors-palette-primary-default);
+  --primary-foreground: var(--colors-palette-primary-lighter);
+  --secondary:var(--colors-palette-gray-200);
+  --secondary-foreground: var(--colors-palette-gray-600);
+  --muted: var(--colors-palette-gray-200);
+  --muted-foreground: var(--colors-palette-gray-500);
+  --accent: var(--colors-palette-gray-200);
+  --accent-foreground: var(--colors-palette-gray-600);
+  --destructive: var(--colors-palette-error-default);
+  --border: rgba(var(--colors-palette-gray-500Channel)/ var(--opacity-border));
+  --input: rgba(var(--colors-palette-gray-500Channel)/ var(--opacity-border));
+  --ring: var(--colors-palette-primary-default);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: var(--colors-palette-gray-200);
+  --sidebar-foreground: var(--colors-palette-gray-800);
+  --sidebar-primary: var(--colors-palette-primary-default);
+  --sidebar-primary-foreground: var(--colors-palette-primary-lighter);
+  --sidebar-accent: var(--colors-palette-gray-200);
+  --sidebar-accent-foreground: var(--colors-palette-gray-800);
+  --sidebar-border: var(--colors-palette-gray-200);
+  --sidebar-ring: var(--colors-palette-primary-default);
+}
+
+/* Shadcn UI Dark Theme */
+[data-theme-mode="dark"] {
+  --background: #000000;
+  --foreground: #8C8C8C;
+  --card: #141414;
+  --card-foreground: #8C8C8C;
+  --popover: #141414;
+  --popover-foreground: #8C8C8C;
+  --primary: var(--colors-palette-primary-default);
+  --primary-foreground: var(--colors-palette-primary-darker);
+  --secondary: #141414;
+  --secondary-foreground: #8C8C8C;
+  --muted: #141414;
+  --muted-foreground: #8C8C8C;
+  --accent: #141414;
+  --accent-foreground: #8C8C8C;
+  --destructive: var(--colors-palette-error-default);
+  --border: #8C8C8C;
+  --input: #8C8C8C;
+  --ring: var(--colors-palette-primary-default);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: #141414;
+  --sidebar-foreground: #8C8C8C;
+  --sidebar-primary: var(--colors-palette-primary-default);
+  --sidebar-primary-foreground: var(--colors-palette-primary-darker);
+  --sidebar-accent: #141414;
+  --sidebar-accent-foreground: #8C8C8C;
+  --sidebar-border: rgba(var(--colors-palette-gray-500Channel)/ var(--opacity-border));
+  --sidebar-ring: var(--colors-palette-primary-default);
+}
+
+/* slash layout */
+:root{
+  --layout-nav-width: 260px;
+  --layout-nav-width-mini: 88px;
+  --layout-nav-height-horizontal: 48px;
+  --layout-header-height: 64px;
+  --layout-multi-tabs-height: 48px;
+}
